@@ -1,4 +1,4 @@
-#! /opt/rakudo/bin/perl6
+#! /usr/local/share/rakudo-2019.03/bin/perl6
 use v6.d;
 
 # Temporary storage directory after downloading from githubs
