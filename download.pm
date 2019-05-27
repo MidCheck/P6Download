@@ -1,35 +1,39 @@
 #! /usr/local/share/rakudo-2019.03/bin/perl6
 use v6.d;
+use File::Directory::Tree;
 
 # Temporary storage directory after downloading from githubs
 my $outdir = '/opt/'; 
 
 # the url of modules from github
-my @URLS = 
-	"https://github.com/retupmoca/P6-Digest-HMAC",
-	"https://github.com/perl6-community-modules/URI-Encode",
-	"https://github.com/Leont/yamlish",
-	"https://github.com/zostay/perl6-IO-Glob",
-	"https://github.com/leont/path-iterator",
-	"https://github.com/zostay/HTTP-Supply",
-	"https://github.com/jnthn/p6-http-hpack",
-	"https://github.com/jsimonet/log-any",
-	"https://github.com/ufobat/HTTP-Server-Ogre",
-	"https://github.com/tokuhirom/p6-HTTP-MultiPartParser",
-	"https://github.com/Bailador/Bailador"
-;
+my Str @URLS;
+my Bool $DELETE = False;
+for @*ARGS {
+	if ($_.path.f) {
+		# if it is a file
+		@URLS.append: (slurp $_).lines;
+	} else {
+		# this is may be a url str
+		@URLS.push($_.Str);
+	}
+}
 
 my $reg = /https\:\/\/github\.com\/([\w|\-]+\/)+([\w|\-]+)/; 
 
 install $_ for @URLS; 
 
-
-sub get_url($module_name){
-	
-}
+(delete $_ for @URLS ) if $DELETE ;
 
 sub delete ($url) {
-	
+	if ($url ~~ $reg) {
+		if (rmtree $outdir ~ $1) {
+			say "[+] delete " ~ $outdir ~ $1 ~ "success.";
+			return False;
+		} else {
+			say "[-] delete " ~ $outdir ~ $1 ~ "failed!";
+		}
+	}
+	True;
 }
 
 sub install ($url) {
@@ -45,7 +49,7 @@ sub install ($url) {
 			    say "[-] zef reinstall $1 failed!";
 			    exit -1;
 			}
-			return 0;
+			return True;
 		}
 
 		my $command = 'git clone ' ~ "$url" ~ " $execpath";
@@ -63,8 +67,13 @@ sub install ($url) {
 			exit -1;
 		}
 	} else {
-		say "[-] Url illegal !";
-		return -1;
+		if ( $url ~~ /'-''d'/ ) {
+			$DELETE = True;
+			return True;
+		} else {
+			say "[-] Url illegal !";
+			return False;
+		}
 	}
-	return 0;
+	True;
 }
